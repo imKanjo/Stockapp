@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Система управления складом</title>
+  <style>
+    :root {
+      --primary-color: #28a745;
+      --secondary-color: #6c757d;
+      --success-color: #1e7e34;
+      --danger-color: #dc3545;
+      --warning-color: #ffc107;
+      --info-color: #17a2b8;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .role-selector {
+      padding: 8px 15px;
+      border-radius: 4px;
+      border: none;
+      background-color: white;
+      color: var(--dark-color);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .logout-btn {
+      background-color: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .tabs {
+      display: flex;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 15px 20px;
+      cursor: pointer;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+      font-weight: bold;
+    }
+
+    .tab.active {
+      background-color: white;
+      border-bottom: 1px solid white;
+      margin-bottom: -1px;
+    }
+
+    .tab-content {
+      display: none;
+      background-color: white;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 0 5px 5px 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: var(--dark-color);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+    }
+
+    .btn-success:hover {
+      background-color: #1e7e34;
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    .btn-warning {
+      background-color: var(--warning-color);
+      color: var(--dark-color);
+    }
+
+    .btn-warning:hover {
+      background-color: #e0a800;
+    }
+
+    .btn-info {
+      background-color: var(--info-color);
+    }
+
+    .btn-info:hover {
+      background-color: #138496;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .warehouse-map {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 5px;
+      margin: 20px 0;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .cell {
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      text-align: center;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cell.empty {
+      background-color: #d4edda;
+    }
+
+    .cell.partial {
+      background-color: #fff3cd;
+    }
+
+    .cell.full {
+      background-color: #f8d7da;
+    }
+
+    .cell.reserved {
+      background-color: #cce5ff;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .stat-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .stat-label {
+      font-size: 1rem;
+      color: var(--secondary-color);
+    }
+
+    .notification {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .notification.success {
+      background-color: #d4edda;
+      color: #155724;
+      display: block;
+    }
+
+    .notification.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      flex: 1;
+    }
+
+    .chart-container {
+      height: 300px;
+      margin: 20px 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 10px;
+    }
+
+    .chart-bar {
+      width: 40px;
+      background-color: var(--primary-color);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: height 0.5s;
+    }
+
+    .chart-label {
+      position: absolute;
+      bottom: -25px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .chart-value {
+      position: absolute;
+      top: -20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">Система управления складом</div>
+      <div class="user-info">
+        <span id="userName">Гость</span>
+        <select id="roleSelector" class="role-selector" style="display: none;">
+          <option value="worker">Складской работник</option>
+          <option value="manager">Менеджер</option>
+          <option value="admin">Администратор</option>
+        </select>
+        <span id="roleDisplay" style="margin-right: 15px; font-weight: bold;"></span>
+        <button id="logoutBtn" class="logout-btn">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard">Панель управления</div>
+      <div class="tab" data-tab="worker">Панель кладовщика</div>
+      <div class="tab" data-tab="manager">Панель менеджера</div>
+      <div class="tab" data-tab="admin">Панель администратора</div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboardTab" class="tab-content active">
+      <h2>Панель управления складом</h2>
+      <p>Добро пожаловать в Систему управления складом. Выберите роль выше, чтобы получить доступ к определенным функциям.</p>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-label">Всего зон</div>
+          <div class="stat-value" id="totalZones">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Всего ячеек</div>
+          <div class="stat-value" id="totalCells">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Занятых ячеек</div>
+          <div class="stat-value" id="occupiedCells">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Всего продуктов</div>
+          <div class="stat-value" id="totalProducts">0</div>
+        </div>
+      </div>
+
+      <h3>Последние операции</h3>
+      <div id="recentOperations"></div>
+    </div>
+
+    <!-- Worker Functions Tab -->
+    <div id="workerTab" class="tab-content">
+      <h2>Панель кладовщика</h2>
+
+      <div class="notification" id="workerNotification"></div>
+
+
+      <!-- Goods Receiving -->
+      <div class="form-group">
+        <h3>Регистрация приёмки товара</h3>
+        <div class="form-group">
+          <label for="receiveProductName">Наименование товара:</label>
+          <input type="text" id="receiveProductName" placeholder="Введите наименование нового товара">
+        </div>
+        <div class="form-group">
+          <label for="receiveProductSku">Артикул:</label>
+          <input type="text" id="receiveProductSku" placeholder="Введите новый артикул">
+        </div>
+        <div class="form-group">
+          <label for="receiveQuantity">Количество:</label>
+          <input type="number" id="receiveQuantity" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="receiveCategory">Категория товара:</label>
+          <select id="receiveCategory">
+            <option value="">Выберите категорию</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="receiveCell">Выберите ячейку:</label>
+          <select id="receiveCell">
+            <option value="">Выберите ячейку</option>
+          </select>
+        </div>
+        <button id="receiveBtn" class="btn-success">Зарегистрировать приёмку</button>
+      </div>
+
+      <!-- Shipping -->
+      <div class="form-group">
+        <h3>Регистрация отгрузки</h3>
+        <div class="form-group">
+          <label for="shippingProduct">Продукт:</label>
+          <select id="shippingProduct">
+            <option value="">Выберите продукт</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="shippingQuantity">Количество:</label>
+          <input type="number" id="shippingQuantity" min="1" value="1">
+        </div>
+        <button id="shippingBtn" class="btn-danger">Зарегистрировать отгрузку</button>
+      </div>
+
+      <!-- Moving Items -->
+      <div class="form-group">
+        <h3>Перемещение товара между ячейками</h3>
+        <div class="form-group">
+          <label for="moveProduct">Продукт:</label>
+          <select id="moveProduct">
+            <option value="">Выберите продукт</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="moveQuantity">Количество:</label>
+          <input type="number" id="moveQuantity" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="moveToCell">В ячейку (перенос):</label>
+          <select id="moveToCell">
+            <option value="">Выберите целевую ячейку</option>
+          </select>
+        </div>
+        <button id="moveBtn" class="btn-warning">Зарегистрировать перемещение</button>
+      </div>
+
+      <!-- Product Search -->
+      <div class="form-group">
+        <h3>Поиск товара по названию или артикулу</h3>
+        <div class="search-box">
+          <input type="text" id="searchInput" class="search-input" placeholder="Введите наименование товара или артикул">
+          <button id="searchBtn">Поиск</button>
+        </div>
+        <div id="searchResults">
+          <table id="searchResultsTable">
+            <thead>
+              <tr>
+                <th>Наименование товара</th>
+                <th>Артикул</th>
+                <th>Категория</th>
+                <th>Единица измерения</th>
+                <th>Доступно</th>
+              </tr>
+            </thead>
+            <tbody id="searchResultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manager Panel Tab -->
+    <div id="managerTab" class="tab-content">
+      <h2>Панель менеджера</h2>
+
+      <div class="notification" id="managerNotification"></div>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-label">Занятая емкость</div>
+          <div class="stat-value" id="occupiedCapacity">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ожидающие отгрузки</div>
+          <div class="stat-value" id="pendingShipments">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Операции за сегодня</div>
+          <div class="stat-value" id="todaysOperations">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Отсутствующие товары</div>
+          <div class="stat-value" id="outOfStock">0</div>
+        </div>
+      </div>
+
+      <!-- Warehouse Map -->
+      <div class="form-group">
+        <h3>Карта склада</h3>
+        <div class="warehouse-map" id="warehouseMap">
+          <!-- Map will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Zone Statistics -->
+      <div class="form-group">
+        <h3>Статистика заполнения зон</h3>
+        <div class="chart-container" id="zoneStatsChart">
+          <!-- Chart will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Operations History -->
+      <div class="form-group">
+        <h3>История операций</h3>
+        <div class="form-group">
+          <label for="startDate">Дата начала:</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+          <label for="endDate">Дата окончания:</label>
+          <input type="date" id="endDate">
+        </div>
+        <button id="filterOperationsBtn">Фильтровать операции</button>
+        <button id="exportOperationsBtn" class="btn-info">Экспорт в CSV</button>
+
+        <table id="operationsTable">
+          <thead>
+            <tr>
+              <th>Тип</th>
+              <th>Продукт</th>
+              <th>Ячейка</th>
+              <th>Количество</th>
+              <th>Пользователь</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody id="operationsBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Stock Report -->
+      <div class="form-group">
+        <h3>Отчет по остаткам</h3>
+        <button id="generateReportBtn">Сгенерировать отчет</button>
+        <button id="exportReportBtn" class="btn-info">Экспорт отчета в CSV</button>
+
+        <table id="stockReportTable">
+          <thead>
+            <tr>
+              <th>Продукт</th>
+              <th>Артикул</th>
+              <th>Общее количество</th>
+              <th>Местоположения</th>
+              <th>Последнее обновление</th>
+            </tr>
+          </thead>
+          <tbody id="stockReportBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Admin Panel Tab -->
+    <div id="adminTab" class="tab-content">
+      <h2>Панель администратора</h2>
+
+      <div class="notification" id="adminNotification"></div>
+
+      <!-- Warehouse Structure -->
+      <div class="form-group">
+        <h3>Структура склада</h3>
+        <div class="form-group">
+          <label for="zoneName">Название зоны:</label>
+          <input type="text" id="zoneName" placeholder="Введите название зоны">
+        </div>
+        <div class="form-group">
+          <label for="zoneDescription">Описание:</label>
+          <input type="text" id="zoneDescription" placeholder="Введите описание зоны">
+        </div>
+        <button id="addZoneBtn" class="btn-success">Добавить зону</button>
+
+        <table id="zonesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Описание</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="zonesBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Cell Management -->
+      <div class="form-group">
+        <h3>Управление ячейками</h3>
+        <div class="form-group">
+          <label for="cellZone">Зона:</label>
+          <select id="cellZone">
+            <option value="">Выберите зону</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cellRow">Номер ряда:</label>
+          <input type="number" id="cellRow" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="cellNumber">Номер ячейки:</label>
+          <input type="number" id="cellNumber" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="cellCapacity">Емкость:</label>
+          <input type="number" id="cellCapacity" min="1" value="100">
+        </div>
+        <button id="addCellBtn" class="btn-success">Добавить ячейку</button>
+
+        <table id="cellsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Зона</th>
+              <th>Ряд</th>
+              <th>Ячейка</th>
+              <th>Емкость</th>
+              <th>Занято</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="cellsBody"></tbody>
+        </table>
+      </div>
+
+      <!-- User Management -->
+      <div class="form-group">
+        <h3>Управление пользователями</h3>
+
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Имя</th>
+              <th>Логин</th>
+              <th>Роль</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Product Categories -->
+      <div class="form-group">
+        <h3>Категории товаров</h3>
+        <div class="form-group">
+          <label for="categoryName">Название категории:</label>
+          <input type="text" id="categoryName" placeholder="Введите название категории">
+        </div>
+        <button id="addCategoryBtn" class="btn-success">Добавить категорию</button>
+
+        <table id="categoriesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="categoriesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let currentUser = null;
+    let originalUserRole = null; // Store original user role to preserve admin capabilities
+    let products = [];
+    let cells = [];
+    let zones = [];
+    let operations = [];
+    let users = [];
+    let inventory = []; // Added inventory variable for tracking which products are in which cells
+
+    // DOM Elements
+    const roleSelector = document.getElementById('roleSelector');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userName = document.getElementById('userName');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        originalUserRole = currentUser.role; // Store original role to preserve admin capabilities
+      } else {
+        // Redirect to login if not logged in
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load initial data first so we have user info
+      await loadData();
+
+      // Set current user name
+      userName.textContent = currentUser.full_name || currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+      roleSelector.value = currentUser.role;
+
+      // Show role selector only for admin (using original role), otherwise display role as text
+      if (originalUserRole === 'admin') {
+        roleSelector.style.display = 'inline-block';
+        roleDisplay.style.display = 'none';
+      } else {
+        roleSelector.style.display = 'none';
+        roleDisplay.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+        roleDisplay.style.display = 'inline';
+      }
+
+      // Update visible tabs based on user role
+      updateVisibleTabs();
+
+      // Set up event listeners
+      setupEventListeners();
+
+      // Switch to appropriate tab based on role
+      switchToTab(currentUser.role);
+    });
+
+    // Update which tabs are visible based on user role
+    function updateVisibleTabs() {
+      const dashboardTab = document.querySelector('[data-tab="dashboard"]');
+      const workerTab = document.querySelector('[data-tab="worker"]');
+      const managerTab = document.querySelector('[data-tab="manager"]');
+      const adminTab = document.querySelector('[data-tab="admin"]');
+
+      // All users can see dashboard
+      dashboardTab.style.display = 'block';
+
+      if (currentUser.role === 'worker') {
+        // Worker can see dashboard and worker tabs, and now has full access to worker functions
+        workerTab.style.display = 'block';
+        managerTab.style.display = 'none';
+        adminTab.style.display = 'none';
+      } else if (currentUser.role === 'manager') {
+        // Manager can see dashboard, worker and manager tabs
+        workerTab.style.display = 'block';
+        managerTab.style.display = 'block';
+        adminTab.style.display = 'none';
+      } else if (currentUser.role === 'admin') {
+        // Admin can see all tabs
+        workerTab.style.display = 'block';
+        managerTab.style.display = 'block';
+        adminTab.style.display = 'block';
+      }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Role selector
+      roleSelector.addEventListener('change', (e) => {
+        // Only admin can change roles in the UI, which is already enforced by hiding the selector
+        const viewRole = e.target.value; // Role for UI display/perspective
+
+        // Update the current user's role for tab/content display purposes
+        currentUser.role = viewRole;
+        updateVisibleTabs(); // Update visible tabs based on the view role
+
+        // Update the role display element - keep role selector visible for admin
+        if (originalUserRole === 'admin') {
+          // Admin should always see the role selector to switch back
+          roleSelector.style.display = 'inline-block';
+          roleDisplay.style.display = 'none';
+        } else {
+          // Non-admin users should not see role selector
+          roleSelector.style.display = 'none';
+          roleDisplay.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+          roleDisplay.style.display = 'inline';
+        }
+
+        switchToTab(e.target.value);
+      });
+      
+      // Logout button
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+      });
+      
+      // Tab switching
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabName = tab.getAttribute('data-tab');
+
+          // Check permissions based on user role before switching tabs
+          if (currentUser.role === 'worker' && tabName !== 'dashboard' && tabName !== 'worker') {
+            alert('У вас нет доступа к этой вкладке');
+            return;
+          } else if (currentUser.role === 'manager' && tabName !== 'dashboard' && tabName !== 'manager' && tabName !== 'worker') {
+            alert('У вас нет доступа к этой вкладке');
+            return;
+          } else if (currentUser.role === 'admin') {
+            // Admin has access to all tabs
+          } else if (currentUser.role !== 'admin' && (tabName === 'admin')) {
+            alert('У вас нет доступа к этой вкладке');
+            return;
+          }
+
+          switchToTab(tabName);
+        });
+      });
+      
+      // Worker functions
+      document.getElementById('receiveBtn').addEventListener('click', receiveGoods);
+      document.getElementById('shippingBtn').addEventListener('click', processShipping);
+      document.getElementById('moveBtn').addEventListener('click', moveItems);
+      document.getElementById('searchBtn').addEventListener('click', searchProducts);
+      
+      // Manager functions
+      document.getElementById('filterOperationsBtn').addEventListener('click', filterOperations);
+      document.getElementById('exportOperationsBtn').addEventListener('click', exportOperations);
+      document.getElementById('generateReportBtn').addEventListener('click', generateStockReport);
+      document.getElementById('exportReportBtn').addEventListener('click', exportStockReport);
+      
+      // Admin functions
+      document.getElementById('addZoneBtn').addEventListener('click', addZone);
+      document.getElementById('addCellBtn').addEventListener('click', addCell);
+      document.getElementById('addUserBtn').addEventListener('click', addUser);
+      document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+
+      // Setup product selection listeners for auto-selecting cells
+      setupProductSelectionListeners();
+
+      // Add event listeners for product selection changes
+    }
+    
+    // Switch between tabs
+    function switchToTab(tabName) {
+      // Check permissions based on user role
+      if (currentUser.role === 'worker' && tabName !== 'dashboard' && tabName !== 'worker') {
+        alert('У вас нет доступа к этой вкладке');
+        return;
+      } else if (currentUser.role === 'manager' && tabName !== 'dashboard' && tabName !== 'manager' && tabName !== 'worker') {
+        alert('У вас нет доступа к этой вкладке');
+        return;
+      } else if (currentUser.role === 'admin') {
+        // Admin has access to all tabs
+      } else if (currentUser.role !== 'admin' && (tabName === 'admin')) {
+        alert('У вас нет доступа к этой вкладке');
+        return;
+      }
+
+      // Check if the tab is visible (not hidden by role restrictions)
+      const requestedTab = document.querySelector(`[data-tab="${tabName}"]`);
+      if (requestedTab && requestedTab.style.display === 'none') {
+        alert('У вас нет доступа к этой вкладке');
+        return;
+      }
+
+      // Remove active class from all tabs and contents
+      tabs.forEach(tab => {
+        if (tab.style.display !== 'none') { // Only consider visible tabs
+          tab.classList.remove('active');
+        }
+      });
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      // Add active class to selected tab and content
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      document.getElementById(`${tabName}Tab`).classList.add('active');
+
+      // Load specific content based on the tab
+      switch(tabName) {
+        case 'dashboard':
+          loadDashboardStats();
+          break;
+        case 'worker':
+          loadWorkerData();
+          break;
+        case 'manager':
+          loadManagerData();
+          break;
+        case 'admin':
+          loadAdminData();
+          break;
+      }
+    }
+    
+    // Load data from backend
+    async function loadData() {
+      try {
+        // Load zones
+        zones = await fetchData('/api/zones');
+        updateZonesDropdown();
+
+        // Load cells
+        cells = await fetchData('/api/cells');
+        updateCellsDropdown('all');
+
+        // Load products
+        products = await fetchData('/api/products');
+        updateProductsDropdown();
+
+        // Load operations
+        operations = await fetchData('/api/operations');
+
+        // Load users
+        users = await fetchData('/api/users');
+
+        // Load inventory
+        inventory = await fetchData('/api/inventory');
+
+        // Load categories
+        window.categories = await fetchData('/api/categories');
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showNotification('Ошибка загрузки данных. Пожалуйста, проверьте консоль для получения дополнительной информации.', 'error');
+      }
+    }
+    
+    // Fetch data from backend
+    async function fetchData(endpoint) {
+      try {
+        const options = {
+          headers: {}
+        };
+
+        // Add user ID to headers if available
+        if (currentUser && currentUser.id) {
+          options.headers['user-id'] = currentUser.id;
+        }
+
+        const response = await fetch(`http://localhost:4000${endpoint}`, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error(`Error fetching data from ${endpoint}:`, error);
+        return [];
+      }
+    }
+    
+    // Fetch data with method and body
+    async function fetchDataWithMethod(endpoint, method = 'GET', body = null) {
+      try {
+        const options = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        };
+
+        // Add user ID to headers if available (for authentication and authorization)
+        if (currentUser && currentUser.id) {
+          options.headers['user-id'] = currentUser.id;
+        }
+
+        if (body) {
+          options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(`http://localhost:4000${endpoint}`, options);
+
+        if (!response.ok) {
+          // Получаем текст ошибки для более детализированной информации
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error(`Error with ${method} to ${endpoint}:`, error);
+        // Возвращаем объект ошибки, содержащий информацию об ошибке
+        if (error.message.includes('message:')) {
+          const errorMessage = error.message.split('message: ')[1];
+          try {
+            const errorObj = JSON.parse(errorMessage);
+            throw errorObj;
+          } catch {
+            // Если не JSON, возвращаем текст ошибки
+            throw { error: error.message };
+          }
+        }
+        throw error;
+      }
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+      // Определяем текущую активную вкладку и соответствующий элемент уведомления
+      let notificationElement;
+      if (document.getElementById('workerTab').classList.contains('active')) {
+        notificationElement = document.getElementById('workerNotification');
+      } else if (document.getElementById('managerTab').classList.contains('active')) {
+        notificationElement = document.getElementById('managerNotification');
+      } else if (document.getElementById('adminTab').classList.contains('active')) {
+        notificationElement = document.getElementById('adminNotification');
+      }
+
+      if (notificationElement) {
+        notificationElement.textContent = message;
+        notificationElement.className = `notification ${type}`;
+
+        // Автоматически скрываем уведомления об успехе через 3 секунды
+        if (type === 'success') {
+          setTimeout(() => {
+            notificationElement.className = 'notification';
+          }, 3000);
+        }
+      }
+    }
+    
+    // Update zones dropdown
+    function updateZonesDropdown() {
+      const zoneDropdown = document.getElementById('cellZone');
+      zoneDropdown.innerHTML = '<option value="">Выберите зону</option>';
+      zones.forEach(zone => {
+        const option = document.createElement('option');
+        option.value = zone.id;
+        option.textContent = zone.name;
+        zoneDropdown.appendChild(option);
+      });
+    }
+    
+    // Update cells dropdown with different contexts
+    function updateCellsDropdown(context = 'all') {
+      // For "receive" and "moveTo" dropdowns - show all cells
+      if (context === 'all') {
+        // Update receive cell dropdown
+        const receiveDropdown = document.getElementById('receiveCell');
+        if (receiveDropdown) {
+          receiveDropdown.innerHTML = '<option value="">Выберите ячейку</option>';
+          cells.forEach(cell => {
+            const option = document.createElement('option');
+            option.value = cell.id;
+            option.textContent = `${cell.zone_name || 'Н/Д'} - Ряд: ${cell.row_number}, Ячейка: ${cell.cell_number} (${cell.current_fill}/${cell.capacity})`;
+            receiveDropdown.appendChild(option);
+          });
+        }
+
+        // Update move to cell dropdown
+        const moveToDropdown = document.getElementById('moveToCell');
+        if (moveToDropdown) {
+          moveToDropdown.innerHTML = '<option value="">Выберите ячейку</option>';
+          cells.forEach(cell => {
+            const option = document.createElement('option');
+            option.value = cell.id;
+            option.textContent = `${cell.zone_name || 'Н/Д'} - Ряд: ${cell.row_number}, Ячейка: ${cell.cell_number} (${cell.current_fill}/${cell.capacity})`;
+            moveToDropdown.appendChild(option);
+          });
+        }
+      }
+    }
+    
+    // Update categories dropdown for receive goods form
+    function updateCategoriesDropdown() {
+      const categoryDropdown = document.getElementById('receiveCategory');
+      if (!categoryDropdown) return; // Skip if element doesn't exist
+
+      categoryDropdown.innerHTML = '<option value="">Выберите категорию</option>';
+      if (window.categories && Array.isArray(window.categories)) {
+        window.categories.forEach(category => {
+          const option = document.createElement('option');
+          option.value = category.id;
+          option.textContent = category.name;
+          categoryDropdown.appendChild(option);
+        });
+      }
+    }
+
+    // Find all cells containing a specific product
+    function findCellsWithProduct(productId) {
+      const cellsWithProduct = [];
+
+      // Look through inventory data to find all cells that contain this product
+      for (const invItem of inventory) {
+        if (invItem.product_id == productId && invItem.quantity > 0) {
+          const cell = cells.find(c => c.id == invItem.cell_id);
+          if (cell && !cellsWithProduct.find(c => c.id === cell.id)) {
+            // Only add if not already in the list
+            cellsWithProduct.push(cell);
+          }
+        }
+      }
+      return cellsWithProduct;
+    }
+
+    // Update products dropdown and add event listeners for auto-selecting cells
+    function updateProductsDropdown() {
+      const productDropdowns = [
+        document.getElementById('shippingProduct'),
+        document.getElementById('moveProduct')
+      ];
+
+      productDropdowns.forEach(dropdown => {
+        if (!dropdown) return;
+
+        // Store the current selected value to preserve it after update
+        const currentValue = dropdown.value;
+
+        dropdown.innerHTML = '<option value="">Выберите продукт</option>';
+        products.forEach(product => {
+          const option = document.createElement('option');
+          option.value = product.id;
+          option.textContent = `${product.name} (${product.sku})`;
+          dropdown.appendChild(option);
+        });
+
+        // Restore the previous selected value
+        dropdown.value = currentValue;
+      });
+    }
+
+
+    // Setup event listeners for various functions (call once after DOM is loaded)
+    function setupProductSelectionListeners() {
+      // No specific listeners needed now since we removed auto-selection of cells
+      // The dropdowns will be populated by updateProductsDropdown() function
+    }
+    
+    // Worker Functions
+    function loadWorkerData() {
+      // Pre-populate fields with sample data
+      document.getElementById('receiveProductName').value = '';
+      document.getElementById('receiveProductSku').value = '';
+      document.getElementById('receiveQuantity').value = '1';
+      updateCategoriesDropdown();  // Update categories dropdown for receive goods form
+
+      document.getElementById('shippingQuantity').value = '1';
+      document.getElementById('moveQuantity').value = '1';
+
+      // Update all dropdowns when loading worker data
+      updateCellsDropdown('all');  // Update all cell dropdowns
+      updateProductsDropdown();  // Update all product dropdowns
+    }
+    
+    async function receiveGoods() {
+      const productName = document.getElementById('receiveProductName').value;
+      const productSku = document.getElementById('receiveProductSku').value;
+      const quantity = parseInt(document.getElementById('receiveQuantity').value);
+      const categoryId = document.getElementById('receiveCategory').value;
+      const cellId = document.getElementById('receiveCell').value;
+
+      if (!productName || !productSku || !quantity || !cellId) {
+        showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+        return;
+      }
+
+      try {
+        // Check if product exists
+        let product = products.find(p => p.sku === productSku);
+
+        if (!product) {
+          // If product doesn't exist, create it first
+          try {
+            // Use the selected category ID from the dropdown
+            let selectedCategoryId = document.getElementById('receiveCategory').value; // Use selected category
+            if (!selectedCategoryId) {
+              // If no category was selected, use the first available category as fallback
+              selectedCategoryId = 1;
+              if (window.categories && window.categories.length > 0) {
+                selectedCategoryId = window.categories[0].id; // Use the first available category
+              }
+            }
+
+            const newProduct = await fetchDataWithMethod('/api/products', 'POST', {
+              name: productName,
+              sku: productSku,
+              unit: 'шт'
+            });
+            product = newProduct;
+
+            // Add the new product to our local products array
+            products.push(newProduct);
+
+            // Update dropdowns to include the new product
+            updateProductsDropdown();
+          } catch (error) {
+            console.error('Error creating product:', error);
+            // Check if it's a specific error from the server
+            let errorMessage = 'Ошибка при создании товара. Проверьте соединение с сервером или обратитесь к администратору.';
+            if (error.error) {
+              errorMessage = `Ошибка при создании товара: ${error.error}`;
+            } else if (typeof error === 'string') {
+              errorMessage = error;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+
+            // If creation failed, try to search for similar products first
+            const similarProducts = products.filter(p =>
+              p.name.toLowerCase().includes(productName.toLowerCase()) ||
+              p.sku.toLowerCase().includes(productSku.toLowerCase())
+            );
+
+            if (similarProducts.length > 0) {
+              showNotification('Товар с похожим названием или артикулом уже существует. Пожалуйста, уточните данные.', 'error');
+            } else {
+              showNotification(errorMessage, 'error');
+            }
+            return;
+          }
+        }
+
+        const productId = product.id;
+
+        // Add to inventory
+        await fetchDataWithMethod('/api/inventory', 'POST', {
+          cell_id: parseInt(cellId),
+          product_id: productId,
+          quantity: quantity
+          // Don't send user_id in body, server will get it from authentication header
+        });
+
+        showNotification('Товары успешно получены!', 'success');
+
+        // Reset form
+        document.getElementById('receiveProductName').value = '';
+        document.getElementById('receiveProductSku').value = '';
+        document.getElementById('receiveQuantity').value = '1';
+        document.getElementById('receiveCell').value = '';
+
+        // Update UI elements after successful receive
+        updateCellsDropdown('all'); // Update all cell dropdowns to reflect new inventory
+        updateProductsDropdown(); // Update product dropdowns to include new product
+
+        // Reload data
+        await loadData();
+      } catch (error) {
+        console.error('Error receiving goods:', error);
+        showNotification('Ошибка при получении товаров. Пожалуйста, попробуйте снова.', 'error');
+      }
+    }
+    
+    async function processShipping() {
+      const productId = document.getElementById('shippingProduct').value;
+      const quantity = parseInt(document.getElementById('shippingQuantity').value);
+
+      if (!productId || !quantity) {
+        showNotification('Пожалуйста, выберите все обязательные поля', 'error');
+        return;
+      }
+
+      try {
+        // Use the simplified take API endpoint which will automatically find cells with the product
+        const takeResponse = await fetchDataWithMethod('/api/take/simple', 'POST', {
+          product_id: parseInt(productId),
+          quantity: parseInt(quantity)
+        });
+
+        showNotification('Отгрузка успешно обработана!', 'success');
+
+        // Reset form
+        document.getElementById('shippingQuantity').value = '1';
+        document.getElementById('shippingProduct').value = '';
+
+        // Update UI elements after successful shipping
+        updateCellsDropdown('all'); // Update all cell dropdowns to reflect new inventory
+        updateProductsDropdown(); // Update product dropdowns
+
+        // Reload data
+        await loadData();
+      } catch (error) {
+        console.error('Error processing shipping:', error);
+        showNotification('Ошибка при обработке отгрузки. Пожалуйста, попробуйте снова.', 'error');
+      }
+    }
+    
+    async function moveItems() {
+      const productId = document.getElementById('moveProduct').value;
+      const quantity = parseInt(document.getElementById('moveQuantity').value);
+      const toCellId = document.getElementById('moveToCell').value;
+
+      if (!productId || !quantity || !toCellId) {
+        showNotification('Пожалуйста, выберите все обязательные поля', 'error');
+        return;
+      }
+
+      try {
+        // Find the source cell that contains this product
+        const cellsWithProduct = findCellsWithProduct(productId);
+        if (!cellsWithProduct || cellsWithProduct.length === 0) {
+          showNotification('Не найдено ячеек с этим товаром', 'error');
+          return;
+        }
+
+        // Use the first cell that contains the product
+        const sourceCell = cellsWithProduct[0];
+        const fromCellId = sourceCell.id;
+
+        // Check if the source and destination are the same
+        if (fromCellId == toCellId) {
+          showNotification('Ячейки источника и назначения не могут быть одинаковыми', 'error');
+          return;
+        }
+
+        // Get current inventory in the source cell
+        const inventoryResponse = await fetchData(`/api/inventory/${fromCellId}/${productId}`);
+
+        if (!inventoryResponse || inventoryResponse.quantity < quantity) {
+          showNotification('Недостаточно товара в исходной ячейке', 'error');
+          return;
+        }
+
+        // Make the move request to the API
+        const moveResponse = await fetchDataWithMethod('/api/move/simple', 'POST', {
+          product_id: parseInt(productId),
+          from_cell_id: parseInt(fromCellId),
+          to_cell_id: parseInt(toCellId),
+          quantity: parseInt(quantity)
+        });
+
+        showNotification('Товары успешно перемещены!', 'success');
+
+        // Reset form
+        document.getElementById('moveQuantity').value = '1';
+        document.getElementById('moveProduct').value = '';
+        document.getElementById('moveToCell').value = '';
+
+        // Update UI elements after successful move
+        updateCellsDropdown('all'); // Update all cell dropdowns to reflect new inventory
+        updateProductsDropdown(); // Update product dropdowns
+
+        // Reload data
+        await loadData();
+      } catch (error) {
+        console.error('Error moving items:', error);
+        showNotification('Ошибка при перемещении товаров. Пожалуйста, попробуйте снова.', 'error');
+      }
+    }
+    
+    async function searchProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const results = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm) || 
+        product.sku.toLowerCase().includes(searchTerm)
+      );
+      
+      const tbody = document.getElementById('searchResultsBody');
+      tbody.innerHTML = '';
+      
+      results.forEach(product => {
+        const row = document.createElement('tr');
+        
+        // Calculate total quantity in inventory for this product
+        const totalQuantity = operations
+          .filter(op => op.product_id == product.id && op.type !== 'TAKE')
+          .reduce((sum, op) => sum + op.quantity, 0) - 
+                  operations
+          .filter(op => op.product_id == product.id && op.type === 'TAKE')
+          .reduce((sum, op) => sum + op.quantity, 0);
+        
+        row.innerHTML = `
+          <td>${product.name}</td>
+          <td>${product.sku}</td>
+          <td>${product.category_name || 'Н/Д'}</td>
+          <td>${product.unit}</td>
+          <td>${totalQuantity}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Manager Functions
+    function loadManagerData() {
+      renderWarehouseMap();
+      renderZoneStatistics();
+      renderOperationsTable();
+      updateManagerStats(); // Update manager statistics
+    }
+
+    // Update manager statistics
+    function updateManagerStats() {
+      // Calculate and display statistics
+      const totalCells = cells.length;
+      const occupiedCount = cells.filter(cell => cell.current_fill > 0).length;
+      const occupiedCapacity = totalCells > 0 ? Math.round((occupiedCount / totalCells) * 100) : 0;
+
+      // Update capacity display
+      document.getElementById('occupiedCapacity').textContent = `${occupiedCapacity}%`;
+
+      // For pending shipments, we could check for operations with 'TAKE' type
+      // For now, just showing a placeholder - would need more specific logic
+      const pendingShipments = operations.filter(op => op.type === 'TAKE').length;
+      document.getElementById('pendingShipments').textContent = pendingShipments;
+
+      // Operations today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayOps = operations.filter(op => {
+        const opDate = new Date(op.created_at);
+        return opDate >= today && opDate < new Date(today.getTime() + 24*60*60*1000);
+      });
+      document.getElementById('todaysOperations').textContent = todayOps.length;
+
+      // Out of stock items - products with quantity 0 in inventory
+      // This would require checking inventory data
+      const outOfStock = products.filter(product => {
+        // Calculate total quantity in inventory for this product
+        const totalQuantity = operations
+          .filter(op => op.product_id == product.id && op.type !== 'TAKE')
+          .reduce((sum, op) => sum + op.quantity, 0) -
+          operations
+          .filter(op => op.product_id == product.id && op.type === 'TAKE')
+          .reduce((sum, op) => sum + op.quantity, 0);
+        return totalQuantity === 0;
+      }).length;
+      document.getElementById('outOfStock').textContent = outOfStock;
+    }
+
+    function renderWarehouseMap() {
+      const mapContainer = document.getElementById('warehouseMap');
+      mapContainer.innerHTML = '';
+      
+      if (cells.length === 0) {
+        mapContainer.innerHTML = '<p>No cells available. Please add cells in the Admin Panel.</p>';
+        return;
+      }
+      
+      cells.forEach(cell => {
+        const cellDiv = document.createElement('div');
+        cellDiv.className = `cell ${getCellStatus(cell)}`;
+        cellDiv.title = `${cell.zone_name || 'Н/Д'} - Ряд: ${cell.row_number}, Ячейка: ${cell.cell_number}`;
+        cellDiv.textContent = `${cell.row_number}-${cell.cell_number}`;
+        
+        // Add click event to see more details
+        cellDiv.addEventListener('click', () => {
+          alert(`Cell Details:
+            Зона: ${cell.zone_name || 'Н/Д'}
+            Ряд: ${cell.row_number}
+            Ячейка: ${cell.cell_number}
+            Емкость: ${cell.capacity}
+            Занято: ${cell.current_fill}
+            Заполнение %: ${((cell.current_fill / cell.capacity) * 100).toFixed(2)}%`);
+        });
+        
+        mapContainer.appendChild(cellDiv);
+      });
+    }
+    
+    function getCellStatus(cell) {
+      const fillPercentage = cell.capacity > 0 ? (cell.current_fill / cell.capacity) * 100 : 0;
+      
+      if (cell.current_fill === 0) return 'empty';
+      if (fillPercentage < 70) return 'partial';
+      return 'full';
+    }
+    
+    function renderZoneStatistics() {
+      const chartContainer = document.getElementById('zoneStatsChart');
+      chartContainer.innerHTML = '';
+      
+      // Calculate fill percentages for each zone
+      const zoneStats = zones.map(zone => {
+        const zoneCells = cells.filter(cell => cell.zone_id == zone.id);
+        const totalCapacity = zoneCells.reduce((sum, cell) => sum + cell.capacity, 0);
+        const totalOccupied = zoneCells.reduce((sum, cell) => sum + cell.current_fill, 0);
+        const fillPercentage = totalCapacity > 0 ? (totalOccupied / totalCapacity) * 100 : 0;
+        
+        return {
+          zone: zone.name,
+          fillPercentage: fillPercentage
+        };
+      });
+      
+      // Определяем ширину для каждой колонки в зависимости от количества зон
+      const barWidth = zoneStats.length > 0 ? Math.max(60, Math.floor(100 / zoneStats.length) * 6) : 60;
+
+      zoneStats.forEach(stat => {
+        const barContainer = document.createElement('div');
+        barContainer.style.display = 'flex';
+        barContainer.style.flexDirection = 'column';
+        barContainer.style.alignItems = 'center';
+        barContainer.style.width = `${barWidth}px`;
+        barContainer.style.margin = '0 5px';
+
+        const barHeight = Math.max(20, stat.fillPercentage); // Minimum height for visibility
+
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = `${barHeight}px`;
+        bar.style.backgroundColor = stat.fillPercentage < 50 ? '#28a745' :
+                                  stat.fillPercentage < 80 ? '#ffc107' : '#dc3545';
+        bar.style.width = '100%';
+
+        const valueLabel = document.createElement('div');
+        valueLabel.className = 'chart-value';
+        valueLabel.textContent = `${stat.fillPercentage.toFixed(1)}%`;
+        valueLabel.style.fontSize = '0.7rem';
+
+        // Убрали подпись зоны, чтобы избежать наложения
+        barContainer.appendChild(valueLabel);
+        barContainer.appendChild(bar);
+
+        chartContainer.appendChild(barContainer);
+      });
+    }
+    
+    function renderOperationsTable() {
+      // Show only the most recent operations
+      const recentOps = operations.slice(0, 20); // Limit to 20 most recent
+      updateOperationsTable(recentOps);
+    }
+    
+    function filterOperations() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      if (!startDate || !endDate) {
+        alert('Пожалуйста, выберите обе даты');
+        return;
+      }
+
+      // Convert to Date objects for comparison
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      // Adjust end date to include the full day
+      end.setHours(23, 59, 59, 999);
+
+      // Filter operations based on date range
+      const filteredOperations = operations.filter(op => {
+        const opDate = new Date(op.created_at);
+        return opDate >= start && opDate <= end;
+      });
+
+      // Update the operations table with filtered results
+      updateOperationsTable(filteredOperations);
+    }
+
+    // Store currently displayed operations
+    let currentOperations = [];
+
+    // Update operations table with specific data (for filtering)
+    function updateOperationsTable(operationsToShow) {
+      const tbody = document.getElementById('operationsBody');
+      tbody.innerHTML = '';
+
+      // Use provided operations or all operations if none provided
+      const ops = operationsToShow || operations;
+      currentOperations = ops; // Store current operations for export
+
+      ops.forEach(op => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${op.type}</td>
+          <td>${op.product_name || 'Н/Д'}</td>
+          <td>${op.zone_name || 'Н/Д'} - Р${op.row_number || 'Н/Д'} Я${op.cell_number || 'Н/Д'}</td>
+          <td>${op.quantity}</td>
+          <td>${op.user_name || 'Н/Д'}</td>
+          <td>${new Date(op.created_at).toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    function exportOperations() {
+      // Use current displayed operations (filtered or all)
+      const opsToExport = currentOperations.length > 0 ? currentOperations : operations;
+
+      // Prepare CSV content with UTF-8 BOM to ensure proper encoding in Excel
+      const BOM = '\uFEFF';
+      let csvContent = BOM + "Тип,Продукт,Зона,Ряд,Ячейка,Количество,Пользователь,Дата\n";
+
+      opsToExport.forEach(op => {
+        csvContent += `"${op.type || ''}","${op.product_name || ''}","${op.zone_name || ''}","${op.row_number || ''}","${op.cell_number || ''}",${op.quantity},"${op.user_name || ''}","${new Date(op.created_at).toLocaleString()}"\n`;
+      });
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'operations_report.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showNotification('Отчет по операциям успешно экспортирован!', 'success');
+    }
+
+    async function generateStockReport() {
+      // Fetch inventory data to create stock report
+      const tbody = document.getElementById('stockReportBody');
+      tbody.innerHTML = '';
+
+      try {
+        const inventoryData = await fetchData('/api/inventory');
+
+        // Group inventory items by product
+        const groupedInventory = {};
+        inventoryData.forEach(item => {
+          if (!groupedInventory[item.product_id]) {
+            groupedInventory[item.product_id] = {
+              ...item,
+              total_quantity: 0,
+              locations: []
+            };
+          }
+          groupedInventory[item.product_id].total_quantity += item.quantity;
+          groupedInventory[item.product_id].locations.push(`${item.zone_name || 'Н/Д'}-${item.row_number || 'Н/Д'}${item.cell_number || 'Н/Д'}`);
+        });
+
+        // Add each product to the table
+        for (const productId in groupedInventory) {
+          const item = groupedInventory[productId];
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.product_name}</td>
+            <td>${item.sku}</td>
+            <td>${item.total_quantity}</td>
+            <td>${item.locations.join(', ')}</td>
+            <td>${new Date(item.placed_at).toLocaleString()}</td>
+          `;
+          tbody.appendChild(row);
+        }
+
+        showNotification('Stock report generated successfully!', 'success');
+      } catch (error) {
+        console.error('Error generating stock report:', error);
+        showNotification('Error generating stock report. Please try again.', 'error');
+      }
+    }
+
+    function exportStockReport() {
+      // Prepare CSV content with UTF-8 BOM to ensure proper encoding in Excel
+      const BOM = '\uFEFF';
+      const table = document.getElementById('stockReportTable');
+      const rows = table.querySelectorAll('tbody tr');
+
+      if (rows.length === 0) {
+        showNotification('Нет данных отчета по остаткам для экспорта', 'error');
+        return;
+      }
+
+      // Updated header to match required columns
+      let csvContent = BOM + "Продукт,Артикул,Общее количество,Местоположения,Последнее обновление\n";
+
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        // Create an array of cell values, properly escaped for CSV
+        let rowData = [];
+        for (let i = 0; i < cells.length; i++) {
+          let cellValue = cells[i].textContent || '';
+          // Escape double quotes by doubling them and wrap in quotes
+          cellValue = '"' + cellValue.replace(/"/g, '""') + '"';
+          rowData.push(cellValue);
+        }
+        csvContent += rowData.join(',') + '\n';
+      });
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'stock_report.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showNotification('Отчет по остаткам успешно экспортирован!', 'success');
+    }
+    
+    // Admin Functions
+    function loadAdminData() {
+      renderZonesTable();
+      renderCellsTable();
+      renderUsersTable();
+      renderCategoriesTable();
+    }
+    
+    function renderZonesTable() {
+      const tbody = document.getElementById('zonesBody');
+      tbody.innerHTML = '';
+      
+      zones.forEach(zone => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${zone.id}</td>
+          <td>${zone.name}</td>
+          <td>${zone.description || ''}</td>
+          <td>
+            <button class="btn-danger" onclick="deleteZone(${zone.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    function renderCellsTable() {
+      const tbody = document.getElementById('cellsBody');
+      tbody.innerHTML = '';
+      
+      cells.forEach(cell => {
+        const zone = zones.find(z => z.id == cell.zone_id);
+        const fillPercentage = cell.capacity > 0 ? ((cell.current_fill / cell.capacity) * 100).toFixed(2) : 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${cell.id}</td>
+          <td>${zone ? zone.name : 'N/A'}</td>
+          <td>${cell.row_number}</td>
+          <td>${cell.cell_number}</td>
+          <td>${cell.capacity}</td>
+          <td>${cell.current_fill} (${fillPercentage}%)</td>
+          <td>
+            <button class="btn-danger" onclick="deleteCell(${cell.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderCategoriesTable() {
+      const tbody = document.getElementById('categoriesBody');
+      tbody.innerHTML = '';
+
+      // Используем глобальный массив categories, который должен быть загружен в loadData()
+      if (window.categories && Array.isArray(window.categories)) {
+        window.categories.forEach((category, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${category.id}</td>
+            <td>${category.name}</td>
+            <td>
+              <button class="btn-danger" onclick="deleteCategory(${category.id})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } else {
+        console.error('Categories data not available');
+      }
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('usersBody');
+      tbody.innerHTML = '';
+
+      users.forEach(user => {
+        const row = document.createElement('tr');
+
+        // Создаем кнопку "Сменить роль" слева от кнопки "Удалить"
+        let actionButtons = '';
+
+        // Показываем кнопку "Сменить роль", но не для пользователя с логином "admin"
+        if (user.login !== 'admin') {
+          actionButtons += `<button class="btn-info" onclick="showChangeRoleModal(${user.id}, '${user.login}', '${user.role}')" style="margin-right: 10px;">Сменить роль</button>`;
+        }
+
+        // Добавляем кнопку "Удалить"
+        actionButtons += `<button class="btn-danger" onclick="deleteUser(${user.id})">Удалить</button>`;
+
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.full_name}</td>
+          <td>${user.login}</td>
+          <td>${user.role}</td>
+          <td>
+            ${actionButtons}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    async function addZone() {
+      const name = document.getElementById('zoneName').value;
+      const description = document.getElementById('zoneDescription').value;
+      
+      if (!name) {
+        showNotification('Please enter a zone name', 'error');
+        return;
+      }
+      
+      try {
+        const newZone = await fetchDataWithMethod('/api/zones', 'POST', {
+          name: name,
+          description: description
+        });
+        
+        zones.push(newZone);
+        updateZonesDropdown();
+        renderZonesTable();
+        
+        showNotification('Zone added successfully!', 'success');
+        
+        // Reset form
+        document.getElementById('zoneName').value = '';
+        document.getElementById('zoneDescription').value = '';
+      } catch (error) {
+        console.error('Error adding zone:', error);
+        showNotification('Error adding zone. Please try again.', 'error');
+      }
+    }
+    
+    async function addCell() {
+      const zoneId = document.getElementById('cellZone').value;
+      const rowNumber = parseInt(document.getElementById('cellRow').value);
+      const cellNumber = parseInt(document.getElementById('cellNumber').value);
+      const capacity = parseInt(document.getElementById('cellCapacity').value);
+      
+      if (!zoneId || !rowNumber || !cellNumber || !capacity) {
+        showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+        return;
+      }
+      
+      try {
+        const newCell = await fetchDataWithMethod('/api/cells', 'POST', {
+          zone_id: parseInt(zoneId),
+          row_number: rowNumber,
+          cell_number: cellNumber,
+          capacity: capacity
+        });
+        
+        cells.push(newCell);
+        updateCellsDropdown();
+        renderCellsTable();
+        
+        showNotification('Cell added successfully!', 'success');
+        
+        // Reset form
+        document.getElementById('cellZone').value = '';
+        document.getElementById('cellRow').value = '1';
+        document.getElementById('cellNumber').value = '1';
+        document.getElementById('cellCapacity').value = '100';
+      } catch (error) {
+        console.error('Error adding cell:', error);
+        showNotification('Error adding cell. Please try again.', 'error');
+      }
+    }
+    
+    async function addUser() {
+      const name = document.getElementById('userName').value;
+      const login = document.getElementById('userLogin').value;
+      const password = document.getElementById('userPassword').value;
+      const role = document.getElementById('userRole').value;
+
+      console.log('Debug addUser values:', { name, login, password, role });
+
+      const errors = [];
+      if (!name) errors.push('Имя');
+      if (!login) errors.push('Логин');
+      if (!password) errors.push('Пароль');
+      if (!role) errors.push('Роль');
+
+      if (errors.length > 0) {
+        showNotification(`Пожалуйста, заполните следующие поля: ${errors.join(', ')}`, 'error');
+        return;
+      }
+
+      try {
+        console.log('Trying to add user with data:', { login, full_name: name, role });
+        const newUser = await fetchDataWithMethod('/api/users', 'POST', {
+          login: login,
+          password: password,
+          full_name: name,
+          role: role
+        });
+
+        console.log('User added successfully:', newUser);
+
+        users.push(newUser);
+        renderUsersTable();
+
+        showNotification('User added successfully!', 'success');
+
+        // Reset form
+        document.getElementById('userName').value = '';
+        document.getElementById('userLogin').value = '';
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userRole').value = '';
+      } catch (error) {
+        console.error('Error adding user:', error);
+        // Попробуем показать более подробную ошибку
+        if (error && error.error) {
+          showNotification(`Error adding user: ${error.error}`, 'error');
+        } else {
+          showNotification('Error adding user. Please try again.', 'error');
+        }
+      }
+    }
+    
+    async function addCategory() {
+      const categoryName = document.getElementById('categoryName').value.trim();
+
+      if (!categoryName) {
+        showNotification('Пожалуйста, введите название категории', 'error');
+        return;
+      }
+
+      try {
+        // Добавляем категорию через API
+        const newCategory = await fetchDataWithMethod('/api/categories', 'POST', {
+          name: categoryName,
+          description: '' // Можно добавить поле для описания при необходимости
+        });
+
+        showNotification('Категория добавлена успешно!', 'success');
+
+        // Очищаем поле ввода
+        document.getElementById('categoryName').value = '';
+
+        // Перезагружаем данные
+        await loadData();
+        renderCategoriesTable(); // обновляем таблицу категорий
+
+      } catch (error) {
+        console.error('Error adding category:', error);
+        showNotification('Ошибка при добавлении категории. Пожалуйста, попробуйте снова.', 'error');
+      }
+    }
+    
+    // Placeholder delete functions
+    async function deleteZone(zoneId) {
+      if (!confirm('Are you sure you want to delete this zone?')) return;
+      
+      try {
+        await fetchDataWithMethod(`/api/zones/${zoneId}`, 'DELETE');
+        
+        // Update local data
+        zones = zones.filter(z => z.id != zoneId);
+        cells = cells.filter(c => c.zone_id != zoneId); // Remove associated cells
+        
+        updateZonesDropdown();
+        updateCellsDropdown();
+        renderZonesTable();
+        renderCellsTable();
+        
+        showNotification('Zone deleted successfully!', 'success');
+      } catch (error) {
+        console.error('Error deleting zone:', error);
+        showNotification('Error deleting zone. Please try again.', 'error');
+      }
+    }
+    
+    async function deleteCell(cellId) {
+      if (!confirm('Are you sure you want to delete this cell?')) return;
+      
+      try {
+        await fetchDataWithMethod(`/api/cells/${cellId}`, 'DELETE');
+        
+        // Update local data
+        cells = cells.filter(c => c.id != cellId);
+        
+        updateCellsDropdown();
+        renderCellsTable();
+        
+        showNotification('Cell deleted successfully!', 'success');
+      } catch (error) {
+        console.error('Error deleting cell:', error);
+        showNotification('Error deleting cell. Please try again.', 'error');
+      }
+    }
+    
+    // Функция для загрузки данных пользователей
+    async function loadUsersData() {
+      try {
+        // Загружаем пользователей с API
+        const fetchedUsers = await fetchData('/api/users');
+        // Обновляем глобальную переменную
+        users = fetchedUsers;
+      } catch (error) {
+        console.error('Error loading users data:', error);
+        showNotification('Error loading users data.', 'error');
+      }
+    }
+
+    async function changeUserRole(userId, newRole, userLogin) {
+      if (!newRole) return; // Если не выбрана роль, не делаем ничего
+
+      if (!confirm(`Are you sure you want to change role of user "${userLogin}" to ${getRoleDisplayName(newRole)}?`)) {
+        return;
+      }
+
+      try {
+        console.log('Changing role for user ID:', userId, 'to role:', newRole);
+        console.log('Current user:', currentUser);
+
+        // Проверяем, есть ли аутентифицированный пользователь
+        if (!currentUser || !currentUser.id) {
+          throw new Error('No authenticated user found');
+        }
+
+        // Создаем специальный запрос для изменения только роли
+        const options = {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'user-id': currentUser.id  // Добавляем аутентификационный заголовок
+          },
+          body: JSON.stringify({ role: newRole })
+        };
+
+        console.log('Sending request with options:', options);
+
+        const response = await fetch(`http://localhost:4000/api/users/${userId}`, options);
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error response:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        const updatedUser = await response.json();
+        console.log('Server response:', updatedUser);
+
+        // Обновляем данные в локальном массиве
+        const userIndex = users.findIndex(u => u.id == userId);
+        if (userIndex !== -1) {
+          users[userIndex] = updatedUser;
+          console.log('Updated local array. New user data:', users[userIndex]);
+        } else {
+          // Если не нашли пользователя в локальном массиве, добавим его
+          users.push(updatedUser);
+        }
+
+        // Обновляем таблицу
+        renderUsersTable();
+        console.log('Table rendered with updated data');
+
+        showNotification(`Role changed to ${getRoleDisplayName(newRole)} successfully!`, 'success');
+
+        return true; // Успешно выполнено
+      } catch (error) {
+        console.error('Error changing user role:', error);
+        console.error('Error details:', error.message, error.stack);
+        showNotification('Error changing user role. Please try again.', 'error');
+        return false; // Ошибка выполнения
+      }
+    }
+
+    // Функция для отображения модального окна смены роли
+    function showChangeRoleModal(userId, userLogin, currentRole) {
+      // Создаем модальное окно
+      const modal = document.createElement('div');
+      modal.id = 'changeRoleModal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      modal.style.display = 'flex';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '1000';
+
+      // Содержимое модального окна
+      const modalContent = document.createElement('div');
+      modalContent.style.backgroundColor = 'white';
+      modalContent.style.padding = '20px';
+      modalContent.style.borderRadius = '8px';
+      modalContent.style.width = '400px';
+
+      // Заголовок
+      const title = document.createElement('h3');
+      title.textContent = `Смена роли пользователя "${userLogin}"`;
+      modalContent.appendChild(title);
+
+      // Текущая роль
+      const currentRoleDiv = document.createElement('div');
+      currentRoleDiv.style.marginBottom = '15px';
+      currentRoleDiv.innerHTML = `<p><strong>Текущая роль:</strong> ${getRoleDisplayName(currentRole)}</p>`;
+      modalContent.appendChild(currentRoleDiv);
+
+      // Текст с инструкцией
+      const instruction = document.createElement('p');
+      instruction.textContent = 'Выберите новую роль:';
+      instruction.style.marginBottom = '15px';
+      modalContent.appendChild(instruction);
+
+      // Список доступных ролей
+      const availableRoles = ['worker', 'manager', 'admin'].filter(role => role !== currentRole);
+
+      availableRoles.forEach(role => {
+        // Создаем контейнер для каждой роли (надпись и кнопка отдельно)
+        const roleContainer = document.createElement('div');
+        roleContainer.style.display = 'flex';
+        roleContainer.style.justifyContent = 'space-between';
+        roleContainer.style.alignItems = 'center';
+        roleContainer.style.marginBottom = '10px';
+        roleContainer.style.padding = '8px';
+        roleContainer.style.border = '1px solid #ddd';
+        roleContainer.style.borderRadius = '4px';
+
+        // Надпись с названием роли
+        const roleName = document.createElement('span');
+        roleName.textContent = getRoleDisplayName(role);
+        roleContainer.appendChild(roleName);
+
+        // Кнопка выбора роли
+        const roleButton = document.createElement('button');
+        roleButton.className = 'btn-primary';
+        roleButton.textContent = 'Выбрать роль';
+        roleButton.addEventListener('click', async function() {
+          await changeUserRole(userId, role, userLogin);
+          hideChangeRoleModal();
+        });
+        roleContainer.appendChild(roleButton);
+
+        modalContent.appendChild(roleContainer);
+      });
+
+      // Кнопка отмены
+      const cancelButton = document.createElement('button');
+      cancelButton.className = 'btn-danger';
+      cancelButton.style.marginTop = '20px';
+      cancelButton.style.width = '100%';
+      cancelButton.textContent = 'Отмена';
+      cancelButton.onclick = function() {
+        hideChangeRoleModal();
+      };
+      modalContent.appendChild(cancelButton);
+
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    }
+
+    // Функция для скрытия модального окна
+    function hideChangeRoleModal() {
+      const modal = document.getElementById('changeRoleModal');
+      if (modal) {
+        document.body.removeChild(modal);
+      }
+    }
+
+    // Вспомогательная функция для получения отображаемого имени роли
+    function getRoleDisplayName(role) {
+      switch(role) {
+        case 'worker': return 'Складской работник';
+        case 'manager': return 'Менеджер';
+        case 'admin': return 'Администратор';
+        default: return role;
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+
+      try {
+        await fetchDataWithMethod(`/api/users/${userId}`, 'DELETE');
+
+        // Update local data
+        users = users.filter(u => u.id != userId);
+
+        renderUsersTable();
+
+        showNotification('User deleted successfully!', 'success');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Error deleting user. Please try again.', 'error');
+      }
+    }
+
+    async function deleteCategory(categoryId) {
+      if (!confirm(`Are you sure you want to delete this category? This will only remove the category from the list, but products using it will keep the category.`)) return;
+
+      try {
+        await fetchDataWithMethod(`/api/categories/${categoryId}`, 'DELETE');
+
+        showNotification('Category deleted successfully!', 'success');
+        await loadData();
+        renderCategoriesTable();
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        showNotification('Error deleting category. Please try again.', 'error');
+      }
+    }
+    
+    // Dashboard Functions
+    async function loadDashboardStats() {
+      // Update statistics
+      document.getElementById('totalZones').textContent = zones.length;
+      document.getElementById('totalCells').textContent = cells.length;
+      document.getElementById('totalProducts').textContent = products.length;
+      
+      // Calculate occupied cells
+      const occupied = cells.filter(cell => cell.current_fill > 0).length;
+      document.getElementById('occupiedCells').textContent = occupied;
+      
+      // Show recent operations
+      const recentOps = operations.slice(0, 5);
+      const opsContainer = document.getElementById('recentOperations');
+      
+      if (recentOps.length === 0) {
+        opsContainer.innerHTML = '<p>No recent operations.</p>';
+        return;
+      }
+      
+      let opsHtml = '<table><thead><tr><th>Type</th><th>Product</th><th>Quantity</th><th>Date</th></tr></thead><tbody>';
+      recentOps.forEach(op => {
+        opsHtml += `
+          <tr>
+            <td>${op.type}</td>
+            <td>${op.product_name || 'Н/Д'}</td>
+            <td>${op.quantity}</td>
+            <td>${new Date(op.created_at).toLocaleDateString()}</td>
+          </tr>
+        `;
+      });
+      opsHtml += '</tbody></table>';
+      
+      opsContainer.innerHTML = opsHtml;
+    }
+    
+  </script>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Система управления складом - Работник</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .header {
+      background-color: #28a745;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+
+    .tab {
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+      border-radius: 5px 5px 0 0;
+    }
+
+    .tab button {
+      background-color: inherit;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      transition: 0.3s;
+      font-size: 16px;
+      margin-right: 0;
+      border-radius: 0;
+      width: auto;
+    }
+
+    .tab button:hover {
+      background-color: #ddd;
+    }
+
+    .tab button.active {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .tabcontent {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-radius: 0 0 5px 5px;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .success {
+      color: green;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Система управления складом - Панель работника</h1>
+    <button onclick="logout()">Выйти</button>
+  </div>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tab">
+      <button class="tablinks active" onclick="openTab(event, 'inventory')">Управление инвентарем</button>
+      <button class="tablinks" onclick="openTab(event, 'products')">Продукты</button>
+      <button class="tablinks" onclick="openTab(event, 'operations')">История операций</button>
+    </div>
+
+    <!-- Inventory Tab -->
+    <div id="inventory" class="tabcontent" style="display: block;">
+      <h2>Добавить продукт в ячейку</h2>
+      <form id="addInventoryForm">
+        <div class="form-group">
+          <label for="cellSelect">Ячейка:</label>
+          <select id="cellSelect" required>
+            <option value="">Выберите ячейку</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="productSelect">Продукт:</label>
+          <select id="productSelect" required>
+            <option value="">Выберите продукт</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Количество:</label>
+          <input type="number" id="quantity" min="1" required>
+        </div>
+
+        <button type="submit">Добавить в ячейку</button>
+      </form>
+
+      <h2>Текущий инвентарь</h2>
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>Зона</th>
+            <th>Ряд</th>
+            <th>Ячейка</th>
+            <th>Продукт</th>
+            <th>Артикул</th>
+            <th>Количество</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Products Tab -->
+    <div id="products" class="tabcontent">
+      <h2>Продукты</h2>
+      <table id="productsTable">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Артикул</th>
+            <th>Категория</th>
+            <th>Ед. измерения</th>
+          </tr>
+        </thead>
+        <tbody id="productsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Operations Tab -->
+    <div id="operations" class="tabcontent">
+      <h2>История операций</h2>
+      <table id="operationsTable">
+        <thead>
+          <tr>
+            <th>Тип</th>
+            <th>Пользователь</th>
+            <th>Продукт</th>
+            <th>Зона</th>
+            <th>Ряд</th>
+            <th>Ячейка</th>
+            <th>Количество</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody id="operationsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Get user info from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      window.location.href = 'login.html';
+    } else if (user.role === 'admin') {
+      // If user is an admin, redirect to main dashboard
+      window.location.href = 'index.html';
+    } else if (user.role === 'manager') {
+      // Manager can access this page in view-only mode
+      // Show notification about view-only mode
+      setTimeout(() => {
+        alert('Режим просмотра: вы можете просматривать информацию, но не можете вносить изменения.');
+      }, 1000);
+    } else if (user.role !== 'worker') {
+      // If user role is not worker, manager, or admin, redirect to login
+      window.location.href = 'login.html';
+    }
+
+    // DOM Elements
+    const cellSelect = document.getElementById('cellSelect');
+    const productSelect = document.getElementById('productSelect');
+    const inventoryBody = document.getElementById('inventoryBody');
+    const productsBody = document.getElementById('productsBody');
+    const operationsBody = document.getElementById('operationsBody');
+
+    // Load initial data
+    loadCells();
+    loadProducts();
+    loadInventory();
+    loadOperations();
+
+    // Event listeners
+    document.getElementById('addInventoryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        cell_id: parseInt(cellSelect.value),
+        product_id: parseInt(productSelect.value),
+        quantity: parseInt(document.getElementById('quantity').value)
+        // user_id больше не передаем, сервер определит его из заголовка
+      };
+
+      // Валидация данных
+      if (!formData.cell_id || !formData.product_id || !formData.quantity || formData.quantity <= 0) {
+        alert('Пожалуйста, заполните все поля корректно');
+        return;
+      }
+
+      try {
+        console.log('Sending inventory data:', formData);
+
+        const response = await authenticatedFetch('http://localhost:4000/api/inventory', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        console.log('Response status:', response.status);
+        const result = await response.json();
+        console.log('Response data:', result);
+
+        if (response.ok) {
+          document.getElementById('addInventoryForm').reset();
+          await loadInventory();
+          await loadOperations();
+          alert('Инвентарь успешно обновлен!');
+        } else {
+          console.error('Server error response:', result);
+          alert(result.error || `Не удалось обновить инвентарь: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Network error:', error);
+        alert(`Произошла ошибка сети: ${error.message}`);
+      }
+    });
+
+    // Вспомогательная функция для выполнения аутентифицированных запросов
+    async function authenticatedFetch(url, options = {}) {
+      const defaultOptions = {
+        headers: {
+          'user-id': user.id,
+          'Content-Type': 'application/json'
+        }
+      };
+
+      // Объединяем переданные опции с дефолтными
+      const fetchOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+          ...defaultOptions.headers,
+          ...(options.headers || {})
+        }
+      };
+
+      return await fetch(url, fetchOptions);
+    }
+
+    // Functions
+    async function loadCells() {
+      try {
+        const response = await authenticatedFetch('http://localhost:4000/api/cells');
+        const cells = await response.json();
+
+        cellSelect.innerHTML = '<option value="">Выберите ячейку</option>';
+        cells.forEach(cell => {
+          const option = document.createElement('option');
+          option.value = cell.id;
+          option.textContent = `${cell.zone_name || 'N/A'} - Ряд ${cell.row_number}, Ячейка ${cell.cell_number} (${cell.current_fill}/${cell.capacity})`;
+          cellSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки ячеек:', error);
+      }
+    }
+
+    async function loadProducts() {
+      try {
+        const response = await authenticatedFetch('http://localhost:4000/api/products');
+        const products = await response.json();
+
+        productSelect.innerHTML = '<option value="">Выберите продукт</option>';
+        products.forEach(product => {
+          const option = document.createElement('option');
+          option.value = product.id;
+          option.textContent = `${product.name} (${product.sku})`;
+          productSelect.appendChild(option);
+        });
+
+        // Also populate the products table
+        productsBody.innerHTML = '';
+        products.forEach(product => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.sku}</td>
+            <td>${product.category_name || 'N/A'}</td>
+            <td>${product.unit}</td>
+          `;
+          productsBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки продуктов:', error);
+      }
+    }
+
+    async function loadInventory() {
+      try {
+        const response = await authenticatedFetch('http://localhost:4000/api/inventory');
+        const inventory = await response.json();
+
+        inventoryBody.innerHTML = '';
+        inventory.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.zone_name || 'N/A'}</td>
+            <td>${item.row_number || 'N/A'}</td>
+            <td>${item.cell_number || 'N/A'}</td>
+            <td>${item.product_name}</td>
+            <td>${item.sku}</td>
+            <td>${item.quantity}</td>
+          `;
+          inventoryBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки инвентаря:', error);
+      }
+    }
+
+    async function loadOperations() {
+      try {
+        const response = await authenticatedFetch('http://localhost:4000/api/operations');
+        const operations = await response.json();
+
+        operationsBody.innerHTML = '';
+        operations.forEach(op => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${op.type}</td>
+            <td>${op.user_name}</td>
+            <td>${op.product_name}</td>
+            <td>${op.zone_name || 'N/A'}</td>
+            <td>${op.row_number || 'N/A'}</td>
+            <td>${op.cell_number || 'N/A'}</td>
+            <td>${op.quantity}</td>
+            <td>${new Date(op.created_at).toLocaleString()}</td>
+          `;
+          operationsBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки операций:', error);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    function openTab(evt, tabName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    // Если пользователь - менеджер, отключаем элементы управления
+    if (user && user.role === 'manager') {
+      // Находим и скрываем форму добавления инвентаря
+      const addInventoryForm = document.getElementById('addInventoryForm');
+      if (addInventoryForm) {
+        addInventoryForm.style.display = 'none';
+      }
+
+      // Также отключаем все кнопки submit в документе
+      const submitButtons = document.querySelectorAll('button[type="submit"]');
+      submitButtons.forEach(button => {
+        button.style.display = 'none';
+      });
+
+      // Отключаем все input поля
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => {
+        input.disabled = true;
+      });
+
+      // Отключаем все select поля
+      const selects = document.querySelectorAll('select');
+      selects.forEach(select => {
+        select.disabled = true;
+      });
+
+      // Отключаем все кнопки, кроме вкладок и выхода
+      const allButtons = document.querySelectorAll('button');
+      allButtons.forEach(button => {
+        // Получаем текст обработчика события
+        const onclickText = button.getAttribute('onclick');
+
+        // Не отключаем кнопки вкладок и кнопку выхода
+        if (!(onclickText && onclickText.includes('openTab')) &&
+            !(onclickText && onclickText.includes('logout'))) {
+          button.disabled = true;
+          button.style.opacity = '0.5';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
